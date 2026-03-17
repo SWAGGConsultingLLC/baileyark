@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Age Verification — Bailey ARK</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #111;
+      border: 1px solid #2a8a8a;
+      border-radius: 12px;
+      padding: 3rem 2.5rem;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(42, 138, 138, 0.15);
+    }
+
+    .logo {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #C5A028;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.25rem;
+    }
+
+    .logo span {
+      color: #2a8a8a;
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+      color: #666;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #e0e0e0;
+      margin-bottom: 0.75rem;
+    }
+
+    .description {
+      font-size: 0.9rem;
+      color: #888;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .privacy-badges {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      color: #2a8a8a;
+      border: 1px solid #2a8a8a44;
+      border-radius: 20px;
+      padding: 0.3rem 0.75rem;
+      background: #2a8a8a11;
+    }
+
+    #verify-btn {
+      background: #C5A028;
+      color: #0a0a0a;
+      border: none;
+      border-radius: 8px;
+      padding: 1rem 2.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s, transform 0.1s;
+      width: 100%;
+    }
+
+    #verify-btn:hover:not(:disabled) {
+      background: #d4af35;
+    }
+
+    #verify-btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    #verify-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 1.75rem;
+      min-height: 4rem;
+    }
+
+    .status-processing {
+      color: #2a8a8a;
+      font-size: 0.9rem;
+    }
+
+    .status-success {
+      color: #4caf50;
+      font-size: 0.9rem;
+    }
+
+    .status-error {
+      color: #ef5350;
+      font-size: 0.9rem;
+    }
+
+    .token-box {
+      margin-top: 1rem;
+      background: #0a0a0a;
+      border: 1px solid #2a8a8a44;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      color: #2a8a8a;
+      word-break: break-all;
+      text-align: left;
+    }
+
+    .token-label {
+      font-size: 0.7rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.35rem;
+    }
+
+    .redirect-msg {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .redirect-countdown {
+      color: #C5A028;
+      font-weight: 600;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #2a8a8a33;
+      border-top-color: #2a8a8a;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.72rem;
+      color: #333;
+      text-align: center;
+    }
+
+    footer a {
+      color: #2a8a8a;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">BAILEY <span>ARK</span></div>
+  <div class="tagline">SWAGG Consulting LLC • Privacy-First Verification</div>
+
+  <h1>Age Verification Required</h1>
+  <p class="description">
+    To access this content, please confirm you are 18 or older.
+    No personal information is collected — only a yes/no result
+    and a timestamp are recorded.
+  </p>
+
+  <div class="privacy-badges">
+    <span class="badge">No Name Stored</span>
+    <span class="badge">No Email Stored</span>
+    <span class="badge">No DOB Stored</span>
+    <span class="badge">No IP Stored</span>
+  </div>
+
+  <button id="verify-btn" onclick="verify()">Verify My Age</button>
+
+  <div id="status"></div>
+</div>
+
+<footer>
+  Powered by <a href="https://swaggconsulting.com/ark" target="_blank">Bailey ARK</a> &mdash; SWAGG Consulting LLC
+</footer>
+
+<script>
+  // ─── CONFIG ───────────────────────────────────────────────────────────────
+  const SUPABASE_URL   = 'https://aklxxrmytplbrjqunkpg.supabase.co';
+  const SUPABASE_ANON  = 'sb_publishable_M7GdgSJ3lyCo1AhF7QJWaw_UNa4330z';
+  const REDIRECT_URL   = 'https://swaggconsulting.com';
+  const REDIRECT_DELAY = 3; // seconds
+  // ──────────────────────────────────────────────────────────────────────────
+
+  async function verify() {
+    const btn = document.getElementById('verify-btn');
+    const status = document.getElementById('status');
+
+    btn.disabled = true;
+    status.innerHTML = '<p class="status-processing"><span class="spinner"></span>Recording verification\u2026</p>';
+
+    try {
+      const response = await fetch(SUPABASE_URL + '/rest/v1/age_verifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': 'Bearer ' + SUPABASE_ANON,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          verified: true,
+          verified_at: new Date().toISOString(),
+          source: 'bailey-ark'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Server responded with ' + response.status);
+      }
+
+      status.innerHTML = '<p class="status-success">\u2713 Age verified successfully</p>'
+        + '<p class="redirect-msg">Redirecting in <span class="redirect-countdown" id="countdown">' + REDIRECT_DELAY + '</span> seconds\u2026</p>';
+
+      let remaining = REDIRECT_DELAY;
+      const interval = setInterval(function() {
+        remaining--;
+        const el = document.getElementById('countdown');
+        if (el) el.textContent = remaining;
+        if (remaining <= 0) {
+          clearInterval(interval);
+          window.location.href = REDIRECT_URL;
+        }
+      }, 1000);
+
+    } catch (err) {
+      status.innerHTML = '<p class="status-error">\u2717 Verification failed. Please try again.</p>'
+        + '<p class="status-error" style="font-size:0.8rem;margin-top:0.5rem;color:#666">' + err.message + '</p>';
+      btn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>

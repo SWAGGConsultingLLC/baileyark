@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bailey ARK — Live Transparency Log</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 0 0 4rem;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #111;
+      border-bottom: 1px solid #2a8a8a44;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo { font-size: 1.5rem; font-weight: 700; color: #C5A028; letter-spacing: 0.1em; }
+    .logo span { color: #2a8a8a; }
+    .logo-sub { font-size: 0.72rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem; }
+
+    .live-badge {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.78rem; color: #4caf50; font-weight: 600;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #4caf50;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex; gap: 1px; background: #1a1a1a;
+      border-bottom: 1px solid #1e1e1e; flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1; min-width: 140px;
+      background: #111; padding: 1.25rem 1.5rem;
+      border-right: 1px solid #1e1e1e;
+    }
+    .stat-card:last-child { border-right: none; }
+    .stat-value {
+      font-size: 2rem; font-weight: 700; color: #C5A028;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-value.loading { opacity: 0.4; }
+    .stat-label { font-size: 0.72rem; color: #555; text-transform: uppercase; letter-spacing: 0.07em; margin-top: 0.25rem; }
+
+    /* ── Privacy notice ── */
+    .privacy-banner {
+      margin: 1.5rem 2rem 0;
+      background: #111;
+      border: 1px solid #2a8a8a33;
+      border-left: 3px solid #2a8a8a;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      font-size: 0.85rem;
+      color: #888;
+      line-height: 1.6;
+    }
+    .privacy-banner strong { color: #2a8a8a; }
+
+    /* ── Sections ── */
+    .section { margin: 1.5rem 2rem 0; }
+    .section-title {
+      font-size: 0.8rem; color: #555;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      font-weight: 600; margin-bottom: 0.75rem;
+    }
+
+    /* ── Verification log ── */
+    .verif-log {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .verif-row {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 0.82rem;
+      animation: fadeIn 0.4s ease;
+    }
+    .verif-row:last-child { border-bottom: none; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; } }
+    .verif-status { font-weight: 700; min-width: 90px; }
+    .verif-status.ok { color: #4caf50; }
+    .verif-status.no { color: #ef5350; }
+    .verif-source { color: #333; font-size: 0.75rem; font-family: monospace; }
+    .verif-time { color: #444; margin-left: auto; white-space: nowrap; font-size: 0.75rem; }
+
+    /* ── ARK Entries ── */
+    .entries-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+    .ark-entry {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 8px;
+      padding: 1.1rem 1.25rem;
+      transition: border-color 0.2s;
+    }
+    .ark-entry:hover { border-color: #2a8a8a44; }
+    .entry-meta {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 0.5rem; flex-wrap: wrap;
+    }
+    .entry-id { font-size: 0.7rem; color: #333; font-family: monospace; }
+    .entry-date { font-size: 0.72rem; color: #444; margin-left: auto; }
+    .entry-title { font-size: 0.95rem; font-weight: 600; color: #e0e0e0; margin-bottom: 0.35rem; }
+    .entry-body { font-size: 0.82rem; color: #777; line-height: 1.55; }
+
+    /* ── Tags ── */
+    .entry-tag {
+      font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.55rem;
+      border-radius: 12px; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .tag-arch   { background: #1a2a3a; color: #5b9bd5; border: 1px solid #5b9bd533; }
+    .tag-signal { background: #2a1a3a; color: #a855f7; border: 1px solid #a855f733; }
+    .tag-verify { background: #1a2e1a; color: #4caf50; border: 1px solid #4caf5033; }
+    .tag-legal  { background: #3a2a1a; color: #f59e0b; border: 1px solid #f59e0b33; }
+    .tag-deploy { background: #1a2a2a; color: #2a8a8a; border: 1px solid #2a8a8a44; }
+
+    .ark-empty { padding: 2rem; text-align: center; color: #333; font-size: 0.85rem; }
+
+    footer {
+      margin-top: 3rem; text-align: center;
+      font-size: 0.72rem; color: #2a2a2a;
+    }
+    footer a { color: #2a8a8a; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">BAILEY <span>ARK</span></div>
+    <div class="logo-sub">SWAGG Consulting LLC — Public Transparency Log</div>
+  </div>
+  <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-value loading" id="stat-verifications">—</div>
+    <div class="stat-label">Total Verifications</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value loading" id="stat-entries">—</div>
+    <div class="stat-label">ARK Entries</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value loading" id="stat-deployed">—</div>
+    <div class="stat-label">Deployed</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value loading" id="stat-verified">—</div>
+    <div class="stat-label">Verified Entries</div>
+  </div>
+</div>
+
+<div class="privacy-banner">
+  <strong>Privacy-First by Design.</strong>
+  This log contains <strong>no personal information</strong> — no names, emails, dates of birth,
+  IP addresses, or identifying data of any kind. Verification events record only a
+  <strong>yes/no result</strong> and a <strong>timestamp</strong>.
+  All records are automatically deleted after <strong>30 days</strong>.
+</div>
+
+<div class="section">
+  <div class="section-title">Recent Verification Events</div>
+  <div class="verif-log" id="verif-log">
+    <div class="ark-empty">Loading…</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">ARK Entries</div>
+  <div class="entries-grid" id="entries-wrap">
+    <div class="ark-empty">Loading…</div>
+  </div>
+</div>
+
+<footer>
+  <p>Bailey ARK &mdash; <a href="https://swaggconsulting.com" target="_blank">SWAGG Consulting LLC</a> &mdash; 81OS</p>
+  <p style="margin-top:0.3rem">Records auto-delete after 30 days &bull; No PII ever stored</p>
+</footer>
+
+<script>
+  // ─── CONFIG ────────────────────────────────────────────────────────────────
+  const SUPABASE_URL  = 'https://aklxxrmytplbrjqunkpg.supabase.co';
+  const SUPABASE_ANON = 'sb_publishable_M7GdgSJ3lyCo1AhF7QJWaw_UNa4330z';
+  // ───────────────────────────────────────────────────────────────────────────
+
+  const TAG_CFG = {
+    arch:   { label: 'Architecture', cls: 'tag-arch'   },
+    signal: { label: 'Signal',       cls: 'tag-signal'  },
+    verify: { label: 'Verified',     cls: 'tag-verify'  },
+    legal:  { label: 'Legal',        cls: 'tag-legal'   },
+    deploy: { label: 'Deployed',     cls: 'tag-deploy'  },
+  };
+
+  function arkHeaders(countExact) {
+    var h = {
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON,
+      'Content-Type': 'application/json'
+    };
+    if (countExact) h['Prefer'] = 'count=exact';
+    return h;
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  function formatTime(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function animateNum(id, target) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('loading');
+    var cur = 0;
+    var step = Math.max(1, Math.floor(target / 30));
+    var t = setInterval(function () {
+      cur = Math.min(cur + step, target);
+      el.textContent = cur;
+      if (cur >= target) clearInterval(t);
+    }, 40);
+  }
+
+  async function loadStats() {
+    var endpoints = [
+      { id: 'stat-verifications', url: '/rest/v1/age_verifications?select=id' },
+      { id: 'stat-entries',       url: '/rest/v1/ark_entries?select=id' },
+      { id: 'stat-deployed',      url: '/rest/v1/ark_entries?tag=eq.deploy&select=id' },
+      { id: 'stat-verified',      url: '/rest/v1/ark_entries?tag=eq.verify&select=id' }
+    ];
+    for (var i = 0; i < endpoints.length; i++) {
+      try {
+        var res = await fetch(SUPABASE_URL + endpoints[i].url, { headers: arkHeaders(true) });
+        var count = (res.headers.get('content-range') || '').split('/')[1] || '0';
+        animateNum(endpoints[i].id, parseInt(count) || 0);
+      } catch (e) {
+        var el = document.getElementById(endpoints[i].id);
+        if (el) { el.classList.remove('loading'); el.textContent = '—'; }
+      }
+    }
+  }
+
+  async function loadVerifications() {
+    var wrap = document.getElementById('verif-log');
+    try {
+      var res = await fetch(
+        SUPABASE_URL + '/rest/v1/age_verifications?select=verified,verified_at,source&order=verified_at.desc&limit=20',
+        { headers: arkHeaders() }
+      );
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var rows = await res.json();
+      if (!rows || rows.length === 0) {
+        wrap.innerHTML = '<div class="ark-empty">No verification events yet.</div>';
+        return;
+      }
+      wrap.innerHTML = rows.map(function (r) {
+        var ok = r.verified === true;
+        return '<div class="verif-row">'
+          + '<span class="verif-status ' + (ok ? 'ok' : 'no') + '">' + (ok ? '✓ Verified' : '✗ Declined') + '</span>'
+          + '<span class="verif-source">' + (r.source || '') + '</span>'
+          + '<span class="verif-time">' + formatTime(r.verified_at) + '</span>'
+          + '</div>';
+      }).join('');
+    } catch (e) {
+      wrap.innerHTML = '<div class="ark-empty">Could not load verification events.</div>';
+    }
+  }
+
+  async function loadEntries() {
+    var wrap = document.getElementById('entries-wrap');
+    try {
+      var res = await fetch(
+        SUPABASE_URL + '/rest/v1/ark_entries?select=*&order=created_at.desc',
+        { headers: arkHeaders() }
+      );
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var entries = await res.json();
+      if (!entries || entries.length === 0) {
+        wrap.innerHTML = '<div class="ark-empty">No ARK entries found.</div>';
+        return;
+      }
+      wrap.innerHTML = entries.map(function (e) {
+        var cfg = TAG_CFG[e.tag] || TAG_CFG.arch;
+        return '<div class="ark-entry">'
+          + '<div class="entry-meta">'
+          + '<span class="entry-id">' + (e.entry_id || e.id || '') + '</span>'
+          + '<span class="entry-tag ' + cfg.cls + '">' + cfg.label + '</span>'
+          + '<span class="entry-date">' + formatDate(e.created_at) + '</span>'
+          + '</div>'
+          + '<div class="entry-title">' + (e.title || '') + '</div>'
+          + '<div class="entry-body">' + (e.body || e.description || '') + '</div>'
+          + '</div>';
+      }).join('');
+    } catch (e) {
+      wrap.innerHTML = '<div class="ark-empty">Error loading ARK entries.</div>';
+    }
+  }
+
+  // ── Realtime: new verifications appear instantly ────────────────────────────
+  function subscribeRealtime() {
+    var wsUrl = SUPABASE_URL.replace('https://', 'wss://')
+      + '/realtime/v1/websocket?apikey=' + SUPABASE_ANON + '&vsn=1.0.0';
+
+    function connect() {
+      var ws = new WebSocket(wsUrl);
+      ws.onopen = function () {
+        ws.send(JSON.stringify({
+          topic: 'realtime:public:age_verifications',
+          event: 'phx_join',
+          payload: {},
+          ref: '1'
+        }));
+      };
+      ws.onmessage = function (msg) {
+        try {
+          var data = JSON.parse(msg.data);
+          if (data.event === 'INSERT' && data.payload && data.payload.record) {
+            prependVerification(data.payload.record);
+            loadStats();
+          }
+        } catch (e) { /* ignore parse errors */ }
+      };
+      ws.onclose = function () { setTimeout(connect, 5000); };
+    }
+    connect();
+  }
+
+  function prependVerification(r) {
+    var wrap = document.getElementById('verif-log');
+    var empty = wrap.querySelector('.ark-empty');
+    if (empty) empty.remove();
+    var ok = r.verified === true;
+    var row = document.createElement('div');
+    row.className = 'verif-row';
+    row.innerHTML = '<span class="verif-status ' + (ok ? 'ok' : 'no') + '">' + (ok ? '✓ Verified' : '✗ Declined') + '</span>'
+      + '<span class="verif-source">' + (r.source || '') + '</span>'
+      + '<span class="verif-time">' + formatTime(r.verified_at) + '</span>';
+    wrap.insertBefore(row, wrap.firstChild);
+    var rows = wrap.querySelectorAll('.verif-row');
+    if (rows.length > 20) rows[rows.length - 1].remove();
+  }
+
+  // ── Boot ────────────────────────────────────────────────────────────────────
+  loadStats();
+  loadVerifications();
+  loadEntries();
+  subscribeRealtime();
+</script>
+
+</body>
+</html>
