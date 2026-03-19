@@ -20,7 +20,8 @@
   button#btnSound { border-color:rgba(201,148,58,0.3); color:rgba(201,148,58,0.6); }
   button#btnAdmin { border-color:rgba(100,200,255,0.4); color:rgba(100,200,255,0.8); }
   button#btnAdmin.active { background:rgba(100,200,255,0.1); border-color:rgba(100,200,255,0.9); color:rgba(100,200,255,1); }
-  button#btnHome { border-color:rgba(197,160,40,0.7); color:#C5A028; font-weight:700; }
+  button#btnHome { background:rgba(197,160,40,0.15); border:1px solid #C5A028; color:#C5A028; font-weight:700; font-size:11px; padding:7px 16px; letter-spacing:2px; box-shadow:0 0 12px rgba(197,160,40,0.3); }
+  button#btnHome:hover { background:rgba(197,160,40,0.3); box-shadow:0 0 20px rgba(197,160,40,0.5); }
 
   #live-panel { position:fixed; bottom:60px; left:50%; transform:translateX(-50%); z-index:20; display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:center; }
   .stat-box { background:rgba(5,10,20,0.92); border:1px solid rgba(201,148,58,0.3); border-radius:3px; padding:8px 16px; text-align:center; min-width:80px; backdrop-filter:blur(6px); }
@@ -599,7 +600,7 @@ document.getElementById('btnHome').addEventListener('click',()=>{
 setTimeout(()=>{
   try { window.top.location.href='https://www.swaggconsulting.com/'; }
   catch(e) { window.location.href='https://www.swaggconsulting.com/'; }
-}, 4400);
+}, 45000);
 document.getElementById('btnAdmin').addEventListener('click',toggleAdmin);
 
 function triggerSync(seq){
